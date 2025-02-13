@@ -1,0 +1,1 @@
+cd C:\Users\jieqi\Desktop\JQ\code_projects\audio_deepfake_detector && run_venv && python main.py
