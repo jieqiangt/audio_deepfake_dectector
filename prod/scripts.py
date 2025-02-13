@@ -33,4 +33,31 @@ def predict_single_audio(audio, model):
     num_secs = math.ceil(audio.shape[0]/SAMPLE_RATE)
     y_probs = np.array(y_probs[0:num_secs])
 
-    return y_probs
+    # threshold to determine positive label
+    threshold = 0.7
+
+    # get labels based on threshold
+    labels = [1 if score >= threshold else 0 for score in y_probs]
+
+    # get agg label for whole audio
+    # logic: check if 3 consecutive sections is labelled as 1, if it is the whole audio is declared as fake
+    agg_label = 0
+    for i in range(len(labels)-2):
+        if labels[i] == 1 and labels[i+1] == 1 and labels[i+2] == 1:
+            agg_label = 1
+            break
+
+    # calculate confidence for the whole audio
+    if agg_label == 1:
+        # if it is declared fake, get all probabilities above threshold and average them
+        probs = list(filter(lambda score: score >= threshold, y_probs))
+        print(probs)
+        confidence = np.average(probs)
+    else:
+        # if it is declared fake, get all probabilities above threshold and average them
+        probs = list(filter(lambda score: score <= threshold, y_probs))
+        confidence = np.average(probs)
+
+    y_probs_ts = list(zip(range(0, num_secs), y_probs))
+
+    return (y_probs_ts, confidence)
