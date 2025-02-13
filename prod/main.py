@@ -24,4 +24,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("file_path")
     args = parser.parse_args()
-    main(args.file_path)
+    print(main(args.file_path))
