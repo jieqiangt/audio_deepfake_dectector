@@ -8,7 +8,7 @@ def predict_single_audio(audio, model):
 
     SAMPLE_RATE = 16000
     # split audio into ~2s chunks
-    sample_size = 32300
+    sample_size = 32000
     max_audio_size = audio.shape[0]
     audio_splits = []
     for start_range in range(0, max_audio_size, sample_size):
@@ -21,20 +21,23 @@ def predict_single_audio(audio, model):
         raise ValueError("GPU not detected!")
 
     model = model.to(device)
+    model.eval()
 
     y_probs = []
     for X_raw in audio_splits:
 
         X = preprocess_audio_for_cnn(X_raw)
-        X = X.to(device)
-        y = model(X)
+        with torch.no_grad():
+            X = X.to(device)
+            y = model(X)
+
         y_probs.extend(np.repeat(y.detach().cpu().tolist()[0][1], 2).tolist())
 
     num_secs = math.ceil(audio.shape[0]/SAMPLE_RATE)
     y_probs = y_probs[0:num_secs]
 
     # threshold to determine positive label
-    threshold = 0.6
+    threshold = 0.7
 
     # get labels based on threshold
     labels = [1 if score >= threshold else 0 for score in y_probs]
@@ -42,8 +45,8 @@ def predict_single_audio(audio, model):
     # get agg label for whole audio
     # logic: check if 3 consecutive seconds is labelled as 1, if it is the whole audio is declared as fake
     agg_label = 0
-    for i in range(len(labels)-2):
-        if labels[i] == 1 and labels[i+1] == 1 and labels[i+2] == 1:
+    for i in range(len(labels)-1):
+        if labels[i] == 1 and labels[i+1] == 1:
             agg_label = 1
             break
 

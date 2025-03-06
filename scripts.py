@@ -49,7 +49,6 @@ def train(model, train_dataloader, val_dataloader, criterion, optimizer, epochs,
         # Run the training batches
         for batch, (X_train, y_train) in enumerate(train_dataloader):
             batch += 1
-
             # Apply the model
             X_train = X_train.to(device)
             y_train = y_train.to(device)
@@ -90,8 +89,10 @@ def predict_single_audio(audio, model):
 
     SAMPLE_RATE = 16000
     # split audio into ~2s chunks
-    sample_size = 32300
+    sample_size = 32000
     max_audio_size = audio.shape[0]
+    num_secs = math.ceil(max_audio_size/SAMPLE_RATE)
+
     audio_splits = []
     for start_range in range(0, max_audio_size, sample_size):
         audio_split = split_audio(
@@ -103,16 +104,18 @@ def predict_single_audio(audio, model):
         raise ValueError("GPU not detected!")
 
     model = model.to(device)
+    model.eval()
 
     y_probs = []
     for X_raw in audio_splits:
 
         X = preprocess_audio_for_cnn(X_raw)
-        X = X.to(device)
-        y = model(X)
+        print(X.shape)
+        with torch.no_grad():
+            X = X.to(device)
+            y = model(X)
         y_probs.extend(np.repeat(y.detach().cpu().numpy()[0][1], 2).tolist())
 
-    num_secs = math.ceil(audio.shape[0]/SAMPLE_RATE)
     y_probs = np.array(y_probs[0:num_secs])
 
     return y_probs

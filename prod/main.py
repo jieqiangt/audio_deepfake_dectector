@@ -12,7 +12,7 @@ def main(file_path):
     # initialize model
     model = SimpleCNN_STFT_FRAMESIZE_1024()
     model.load_state_dict(torch.load(
-        './weights/THIRD_CNN_STFT_FRAMESIZE_1024_2SEC_1_weights.pt', weights_only=True))
+        './weights/FIFTH_CNN_STFT_FRAMESIZE_1024_2SEC_1_weights.pt', weights_only=True))
 
     y_probs = predict_single_audio(audio, model)
 

@@ -5,6 +5,7 @@ from data_utils import create_dataloader
 from scripts import train
 from eval_utils import generate_metrics
 from models import SimpleCNN_STFT_FRAMESIZE_1024
+from data_utils import Dataset_ASVspoof2021_STFT
 import warnings
 
 
@@ -14,14 +15,15 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 def main():
 
     # metadata for iteration
-    model_name = 'THIRD_CNN_STFT_FRAMESIZE_1024_2SEC'
+    model_name = 'FIRST_CNN_STFT_FRAMESIZE_1024_4SEC'
     iteration = 1
     results_folder = f'{model_name}_{iteration}'
 
     # hyper parameters
-    batch_size = 48
+    batch_size = 12
+    cut = 64000
     learning_rate = 0.0001
-    epochs = 10
+    epochs = 12
     weight_decay = 0.0001
     amsgrad = False
     betas = [0.9, 0.999]
@@ -44,15 +46,15 @@ def main():
     train_labels_path = './data/train_labels.txt'
     train_data_path = './data/train'
     train_loader = create_dataloader(
-        train_labels_path, train_data_path, batch_size)
+        Dataset_ASVspoof2021_STFT, train_labels_path, train_data_path, cut, batch_size)
 
     val_labels_path = './data/val_labels.txt'
     val_data_path = './data/val'
     val_loader = create_dataloader(
-        val_labels_path, val_data_path, batch_size, shuffle=False)
+        Dataset_ASVspoof2021_STFT, val_labels_path, val_data_path, cut, batch_size, shuffle=False)
 
     # set criterion & optimizer
-    weight = torch.FloatTensor([0.8, 0.2]).to(device)
+    weight = torch.FloatTensor([0.75, 0.25]).to(device)
     criterion = nn.CrossEntropyLoss(weight=weight)
     optimizer = torch.optim.Adam(model.parameters(
     ), lr=learning_rate, betas=betas, weight_decay=weight_decay, amsgrad=amsgrad)
